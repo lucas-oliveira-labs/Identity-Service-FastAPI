@@ -1,3 +1,15 @@
+exclude: |
+  (?x)^(
+    poetry\.lock|
+    alembic/versions/.*|
+    migrations/.*|
+    .venv/.*|
+    __pycache__/.*|
+    .mypy_cache/.*|
+    .pytest_cache/.*|
+    .ruff_cache/.*
+  )$
+
 repos:
   # Remove espaços em branco, corrige EOF etc.
   - repo: https://github.com/pre-commit/pre-commit-hooks

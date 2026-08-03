@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from src.database import TORTOISE_ORM
-from routers.public_router import router as public_router
+from src.routers.public_router import router as public_router
 from tortoise.contrib.fastapi import register_tortoise
 
 app = FastAPI(title="Identity Service", version="1.0.0")

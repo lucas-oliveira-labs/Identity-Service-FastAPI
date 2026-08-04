@@ -13,3 +13,9 @@ class UserService:
             nome=user.nome, email=user.email, password_hash=user.password
         )
         return new_user
+
+    async def get_all_users(self):
+        return await User.all()
+
+    async def get_user_by_id(self, user_id: int):
+        return await User.filter(id=user_id).first()

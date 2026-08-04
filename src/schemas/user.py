@@ -9,6 +9,15 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=6, max_length=255)
 
 
+class UserGet(BaseModel):
+    id: int
+    nome: str
+    email: EmailStr
+
+    class Config:
+        from_attributes = True
+
+
 class UserUpdate(BaseModel):
     nome: Optional[str] = Field(None, min_length=2, max_length=100)
     email: Optional[EmailStr] = Field(None, min_length=8, max_length=255)

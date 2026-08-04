@@ -1,6 +1,7 @@
 from src.models.user import User
 from src.schemas.user import UserCreate, UserUpdate
 from fastapi import HTTPException, status
+from src.core.security import hash_password
 
 
 class UserService:
@@ -8,10 +9,12 @@ class UserService:
         existing_user = await User.filter(email=user.email).first()
 
         if existing_user:
-            raise Exception("Email já cadastrado")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Email já cadastrado"
+            )
 
         new_user = await User.create(
-            nome=user.nome, email=user.email, password_hash=user.password
+            nome=user.nome, email=user.email, password_hash=hash_password(user.password)
         )
         return new_user
 
@@ -31,8 +34,6 @@ class UserService:
 
         existing_user.nome = user.nome
         existing_user.email = user.email
-
-        # existing_user.password_hash = user.password - implementar o jwt depois
 
         await existing_user.save()
         return existing_user

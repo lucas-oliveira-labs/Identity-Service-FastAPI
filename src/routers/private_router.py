@@ -9,9 +9,7 @@ router = APIRouter(
 )
 
 
-router.get("/", response_model=list[UserGet], status_code=status.HTTP_200_OK)
-
-
+@router.get("/", response_model=list[UserGet], status_code=status.HTTP_200_OK)
 async def get_user():
     service = UserService()
 

@@ -36,3 +36,13 @@ class UserService:
 
         await existing_user.save()
         return existing_user
+
+    async def delete_user_by_id(self, user_id: int):
+        user = await User.get_or_none(id=user_id)
+
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Usuário não encontrado"
+            )
+
+        await user.delete()

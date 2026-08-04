@@ -1,21 +1,15 @@
-from sqlalchemy.orm import Session
 from src.models.user import User
+from src.schemas.user import UserCreate
 
 
 class UserService:
-    def __init__(self, db: Session):
-        self.db = db
-
-    def create_user(self, email: str, nome: str):
-        existing_user = self.db.query(User).filter(User.email == email).first()
+    async def create_user(self, user: UserCreate):
+        existing_user = await User.filter(email=user.email).first()
 
         if existing_user:
-            raise ValueError("Email ja cadastrado")
+            raise Exception("Email já cadastrado")
 
-        user = User(email=email, nome=nome)
-
-        self.db.add(user)
-        self.db.commit()
-        self.db.refresh(user)
-
-        return user
+        new_user = await User.create(
+            nome=user.nome, email=user.email, password_hash=user.password
+        )
+        return new_user

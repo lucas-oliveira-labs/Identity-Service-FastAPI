@@ -32,3 +32,11 @@ async def get_user_by_id(user_id: int):
 async def put_user_by_id(user_id: int, user: UserUpdate):
     service = UserService()
     return await service.put_user_by_id(user_id, user)
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_200_OK)
+async def delete_user_by_id(user_id: int):
+    service = UserService()
+    await service.delete_user_by_id(user_id)
+
+    return {"message": "Usuario deletado com sucesso"}

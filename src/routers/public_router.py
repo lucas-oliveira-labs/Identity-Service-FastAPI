@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status
-from src.schemas.user import UserCreate, UserGet
+from src.schemas.user import UserCreate, UserGet, UserUpdate
 from src.services.user_service import UserService
 
 
@@ -26,3 +26,9 @@ async def get_user_by_id(user_id: int):
         return {status.HTTP_404_NOT_FOUND: "User not found"}
     else:
         return user
+
+
+@router.put("/{user_id}", response_model=UserGet, status_code=status.HTTP_200_OK)
+async def put_user_by_id(user_id: int, user: UserUpdate):
+    service = UserService()
+    return await service.put_user_by_id(user_id, user)

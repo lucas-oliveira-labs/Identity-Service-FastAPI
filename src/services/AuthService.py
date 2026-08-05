@@ -47,19 +47,54 @@ class AuthService:
         try:
             payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
 
-            token_type = payload.get("type")
-
-            if token_type != "refresh":
+            if payload.get("type") != "refresh":
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid refresh token",
+                    detail="invalid refresh token",
                 )
+
+            stored_token = await RefreshToken.filter(token=refresh_token).first()
+
+            if not stored_token:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Refresh token inválido",
+                )
+
+            if stored_token.revoked:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Refresh token revogado",
+                )
+
+            if stored_token.expires_at < datetime.now(timezone.utc):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Refresh token expirado",
+                )
+
+            stored_token.revoked = True
+            await stored_token.save()
 
             user_id = payload.get("sub")
 
-            access_token = create_access_token({"sub": str(user_id)})
+            new_access_token = create_access_token({"sub": str(user_id)})
 
-            return {"access_token": access_token, "token_type": "bearer"}
+            new_refresh_token = create_refresh_token({"sub": str(user_id)})
+
+            expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+
+            await RefreshToken.create(
+                token=new_access_token,
+                user_id=stored_token.user_id,
+                expires_at=expires_at,
+            )
+
+            return {
+                "access_token": new_access_token,
+                "refresh_token": new_refresh_token,
+                "token_type": "bearer",
+            }
 
         except JWTError:
             raise HTTPException(

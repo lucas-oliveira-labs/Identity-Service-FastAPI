@@ -2,21 +2,26 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError
 
-from src.services.jwt_service import decode_token
 from src.models.user import User
-from passlib.context import CryptContext
+from pwdlib import PasswordHash
+from src.services.jwt_service import decode_token
 
 
 security = HTTPBearer()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+password_hash = PasswordHash.recommended()
 
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
     try:
-        payload = decode_token(credentials.credentials)
+        token = credentials.credentials
+
+        payload = decode_token(token)
+
+        if payload.get("type") != "access":
+            raise HTTPException(status_code=401, detail="Invalid access token")
 
         user_id = payload.get("sub")
 
@@ -35,8 +40,8 @@ async def get_current_user(
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return password_hash.verify(plain_password, hashed_password)
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return password_hash.hash(password)

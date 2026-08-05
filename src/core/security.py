@@ -34,11 +34,15 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
         user_id: str = payload.get("sub")
 
-        user = await User.filter(id=user_id).first()
-
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
 
+        user = await User.filter(id=user_id).first()
+
+        if user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
         return user
+
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")

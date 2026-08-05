@@ -24,6 +24,9 @@ class UserService:
     async def get_user_by_id(self, user_id: int):
         return await User.filter(id=user_id).first()
 
+    async def get_user_me(self, current_user: User):
+        return current_user
+
     async def put_user_by_id(self, user_id: int, user: UserUpdate):
         existing_user = await User.filter(id=user_id).first()
 

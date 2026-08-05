@@ -2,6 +2,7 @@ from fastapi import APIRouter, status, Depends
 from src.schemas.user import UserGet, UserUpdate
 from src.services.user_service import UserService
 from src.core.security import get_current_user
+from src.models.user import User
 
 
 router = APIRouter(
@@ -14,6 +15,12 @@ async def get_user():
     service = UserService()
 
     return await service.get_all_users()
+
+
+@router.get("/me", response_model=UserGet, status_code=status.HTTP_200_OK)
+async def get_user_me(current_user: User = Depends(get_current_user)):
+    service = UserService()
+    return await service.get_user_me(current_user)
 
 
 @router.get("/{user_id}", response_model=UserGet, status_code=status.HTTP_200_OK)

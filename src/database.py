@@ -15,6 +15,7 @@ TORTOISE_ORM = {
         "models": {
             "models": [
                 "src.models.user",
+                "src.models.refresh_token",
                 "aerich.models",
             ],
             "default_connection": "default",

@@ -35,6 +35,8 @@ class AuthService:
 
         expires_at = datetime.now(timezone.utc) + timedelta(days=7)
 
+        await RefreshToken.filter(user=user, revoked=False).update(revoked=True)
+
         await RefreshToken.create(token=refresh_token, user=user, expires_at=expires_at)
 
         return {
@@ -53,7 +55,10 @@ class AuthService:
                     detail="invalid refresh token",
                 )
 
-            stored_token = await RefreshToken.filter(token=refresh_token).first()
+            stored_token = await RefreshToken.filter(
+                token=refresh_token,
+                revoked=False,
+            ).first()
 
             if not stored_token:
                 raise HTTPException(
@@ -61,22 +66,23 @@ class AuthService:
                     detail="Refresh token inválido",
                 )
 
-            if stored_token.revoked:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Refresh token revogado",
-                )
-
             if stored_token.expires_at < datetime.now(timezone.utc):
+                await stored_token.delete()
+
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Refresh token expirado",
                 )
 
-            stored_token.revoked = True
-            await stored_token.save()
+            await RefreshToken.filter(id=stored_token.id).update(revoked=True)
 
             user_id = payload.get("sub")
+
+            if user_id is None:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token inválido",
+                )
 
             new_access_token = create_access_token({"sub": str(user_id)})
 
@@ -85,7 +91,7 @@ class AuthService:
             expires_at = datetime.now(timezone.utc) + timedelta(days=7)
 
             await RefreshToken.create(
-                token=new_access_token,
+                token=new_refresh_token,
                 user_id=stored_token.user_id,
                 expires_at=expires_at,
             )
@@ -100,3 +106,8 @@ class AuthService:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
             )
+
+    async def logout(self, current_user: User):
+        await RefreshToken.filter(user=current_user, revoked=False).update(revoked=True)
+
+        return {"message": "Logout realizado com sucesso."}

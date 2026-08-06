@@ -18,11 +18,10 @@ dependencies = [
     "aerich (>=0.9.3,<0.10.0)",
     "asyncpg (>=0.31.0,<0.32.0)",
     "email-validator (>=2.3.0,<3.0.0)",
-    "pwdlib (>=0.3.0,<0.4.0)",
+    "pwdlib[argon2] (>=0.3.0,<0.4.0)",
     "python-jose[cryptography] (>=3.5.0,<4.0.0)",
-    "passlib[bcrypt] (>=1.7.4,<2.0.0)",
     "python-dotenv (>=1.2.2,<2.0.0)",
-    "bcrypt (==4.3.0)"
+    "bcrypt==4.0.1",
 ]
 
 
@@ -39,3 +38,6 @@ dev = [
 tortoise_orm = "src.database.TORTOISE_ORM"
 location = "./migrations"
 src_folder = "./."
+
+[tool.poetry]
+package-mode = false

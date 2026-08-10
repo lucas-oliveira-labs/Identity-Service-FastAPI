@@ -26,6 +26,22 @@ psycopg = ["psycopg[binary,pool] (>=3.0.12,<4.0.0)"]
 toml = ["tomli-w (>=1.1.0,<2.0.0) ; python_version >= \"3.11\"", "tomlkit (>=0.11.4,<1.0.0) ; python_version < \"3.11\""]
 
 [[package]]
+name = "aiosmtplib"
+version = "5.1.2"
+description = "asyncio SMTP client"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "aiosmtplib-5.1.2-py3-none-any.whl", hash = "sha256:070d467cc329dafd0af59108ba5d217d973cba10309910fed359a2a7bfb52d7a"},
+    {file = "aiosmtplib-5.1.2.tar.gz", hash = "sha256:04a0ea3c678f5b719f998f290dce010ca512e1385836d3944206299df03b060f"},
+]
+
+[package.extras]
+docs = ["furo (>=2023.9.10)", "sphinx (>=7.0.0)", "sphinx-autodoc-typehints (>=1.24.0)", "sphinx-copybutton (>=0.5.0)"]
+uvloop = ["uvloop (>=0.18)"]
+
+[[package]]
 name = "aiosqlite"
 version = "0.22.1"
 description = "asyncio bridge to the standard sqlite3 module"
@@ -1894,4 +1910,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.14"
-content-hash = "cb85d11d1581f5e05f9587615eb357cdf4256982c2dbbb6643a54a5d88236fec"
+content-hash = "eb7bca178a1556f8d97d9c55fb00f7c25d9ca8f864d60e4e5b1c150484091082"

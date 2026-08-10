@@ -20,6 +20,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mailpit:
+        condition: service_started
 
     restart: unless-stopped
 
@@ -64,6 +66,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+    restart: unless-stopped
+
+
+  mailpit:
+    image: axllent/mailpit:latest
+
+    container_name: identity-mailpit
+
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
     restart: unless-stopped
 

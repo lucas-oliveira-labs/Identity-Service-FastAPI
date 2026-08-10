@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class Login(BaseModel):
@@ -8,3 +8,7 @@ class Login(BaseModel):
 
 class RefreshToken(BaseModel):
     refresh_token: str
+
+
+class ForgotPassword(BaseModel):
+    email: EmailStr

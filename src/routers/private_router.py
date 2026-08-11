@@ -33,6 +33,16 @@ async def get_user_by_id(user_id: int):
         return user
 
 
+@router.put("/me", response_model=UserGet, status_code=status.HTTP_200_OK)
+async def put_user_authenticated(
+    user: UserUpdate,
+    current_user: User = Depends(get_current_user),
+):
+    service = UserService()
+
+    return await service.put_user_me(current_user, user)
+
+
 @router.put("/{user_id}", response_model=UserGet, status_code=status.HTTP_200_OK)
 async def put_user_by_id(user_id: int, user: UserUpdate):
     service = UserService()

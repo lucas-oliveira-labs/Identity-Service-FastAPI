@@ -7,11 +7,12 @@ import os
 from src.models.user import User
 from src.models.refresh_token import RefreshToken
 from src.models.password_reset_token import PasswordResetToken
-from src.schemas.auth import Login, ForgotPassword
+from src.schemas.auth import Login, ForgotPassword, ResetPassword
 from src.core.security import (
     verify_password,
     generate_password_reset_token,
     hash_password_reset_token,
+    hash_password,
 )
 from src.services.jwt_service import create_access_token, create_refresh_token
 from src.services.email_service import EmailService
@@ -153,3 +154,50 @@ class AuthService:
                 "Se o email estiver cadastrado, voce receberá um link para redefinicao de senha"
             )
         }
+
+    async def reset_password(self, data: ResetPassword):
+        token_hash = hash_password_reset_token(data.token)
+
+        reset_token = (
+            await PasswordResetToken.filter(
+                token_hash=token_hash,
+                used_at=None,
+            )
+            .prefetch_related("user")
+            .first()
+        )
+
+        if not reset_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token inválido ou já utilizado.",
+            )
+
+        now = datetime.now(timezone.utc)
+
+        if reset_token.expires_at <= now:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token expirado",
+            )
+
+        user = reset_token.user
+
+        user.password_hash = hash_password(data.new_password)
+
+        await user.save()
+
+        reset_token.used_at = now
+
+        await reset_token.save(update_fields=["used_at"])
+
+        await (
+            PasswordResetToken.filter(
+                user=user,
+                used_at=None,
+            )
+            .exclude(id=reset_token.id)
+            .update(used_at=now)
+        )
+
+        return {"message": "Senha redefinida com sucesso."}

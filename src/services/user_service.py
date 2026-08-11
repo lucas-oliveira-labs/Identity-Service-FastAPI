@@ -1,7 +1,7 @@
 from src.models.user import User
-from src.schemas.user import UserCreate, UserUpdate
+from src.schemas.user import UserCreate, UserUpdate, UserPasswordUpdate
 from fastapi import HTTPException, status
-from src.core.security import hash_password
+from src.core.security import hash_password, verify_password
 
 
 class UserService:
@@ -40,6 +40,35 @@ class UserService:
 
         await existing_user.save()
         return existing_user
+
+    async def put_user_me(self, current_user: User, user: UserUpdate):
+        if user.email is not None:
+            email_exists = (
+                await User.filter(email=user.email).exclude(id=current_user.id).exists()
+            )
+
+            if email_exists:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT, detail="Email já cadastrado"
+                )
+            current_user.email = user.email
+
+        if user.nome is not None:
+            current_user.nome = user.nome
+
+        await current_user.save()
+
+        return current_user
+
+    async def update_password(self, current_user: User, password: UserPasswordUpdate):
+        if not verify_password(password.senha_atual, current_user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Senha atual inválida"
+            )
+
+        current_user.password_hash = hash_password(password.nova_senha)
+
+        await current_user.save()
 
     async def delete_user_by_id(self, user_id: int):
         user = await User.get_or_none(id=user_id)

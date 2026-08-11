@@ -2,17 +2,20 @@ from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
 from fastapi import HTTPException, status
-import os
 
 from src.models.user import User
 from src.models.refresh_token import RefreshToken
-from src.schemas.auth import Login
-from src.core.security import verify_password
+from src.models.password_reset_token import PasswordResetToken
+from src.schemas.auth import Login, ForgotPassword, ResetPassword
+from src.core.security import (
+    verify_password,
+    generate_password_reset_token,
+    hash_password_reset_token,
+    hash_password,
+)
 from src.services.jwt_service import create_access_token, create_refresh_token
-
-
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = "HS256"
+from src.services.email_service import EmailService
+from src.config import SECRET_KEY, ALGORITHM
 
 
 class AuthService:
@@ -111,3 +114,86 @@ class AuthService:
         await RefreshToken.filter(user=current_user, revoked=False).update(revoked=True)
 
         return {"message": "Logout realizado com sucesso."}
+
+    async def forgot_password(self, data: ForgotPassword):
+        user = await User.filter(email=data.email).first()
+
+        if not user:
+            return {
+                "message": "Se o email estiver cadastrado, voce receberá um link para redefinir sua senha."
+            }
+
+        await PasswordResetToken.filter(
+            user=user,
+            used_at=None,
+        ).update(used_at=datetime.now(timezone.utc))
+
+        token = generate_password_reset_token()
+
+        token_hash = hash_password_reset_token(token)
+
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=60)
+
+        await PasswordResetToken.create(
+            user=user, token_hash=token_hash, expires_at=expires_at
+        )
+
+        email_service = EmailService()
+
+        await email_service.send_password_reset_email(
+            email=user.email,
+            reset_token=token,
+        )
+
+        return {
+            "message": (
+                "Se o email estiver cadastrado, voce receberá um link para redefinicao de senha"
+            )
+        }
+
+    async def reset_password(self, data: ResetPassword):
+        token_hash = hash_password_reset_token(data.token)
+
+        reset_token = (
+            await PasswordResetToken.filter(
+                token_hash=token_hash,
+                used_at=None,
+            )
+            .prefetch_related("user")
+            .first()
+        )
+
+        if not reset_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token inválido ou já utilizado.",
+            )
+
+        now = datetime.now(timezone.utc)
+
+        if reset_token.expires_at <= now:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token expirado",
+            )
+
+        user = reset_token.user
+
+        user.password_hash = hash_password(data.new_password)
+
+        await user.save()
+
+        reset_token.used_at = now
+
+        await reset_token.save(update_fields=["used_at"])
+
+        await (
+            PasswordResetToken.filter(
+                user=user,
+                used_at=None,
+            )
+            .exclude(id=reset_token.id)
+            .update(used_at=now)
+        )
+
+        return {"message": "Senha redefinida com sucesso."}

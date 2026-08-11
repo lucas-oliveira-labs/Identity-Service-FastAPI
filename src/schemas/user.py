@@ -24,6 +24,11 @@ class UserUpdate(BaseModel):
     password: Optional[str] = Field(None, min_length=6, max_length=255)
 
 
+class UserPasswordUpdate(BaseModel):
+    senha_atual: str = Field(..., min_length=4, max_length=100)
+    nova_senha: str = Field(..., min_length=6, max_length=255)
+
+
 class UserResponse(BaseModel):
     id: int
     nome: str

@@ -2,7 +2,6 @@ from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
 from fastapi import HTTPException, status
-import os
 
 from src.models.user import User
 from src.models.refresh_token import RefreshToken
@@ -16,10 +15,7 @@ from src.core.security import (
 )
 from src.services.jwt_service import create_access_token, create_refresh_token
 from src.services.email_service import EmailService
-
-
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = "HS256"
+from src.config import SECRET_KEY, ALGORITHM
 
 
 class AuthService:

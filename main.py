@@ -10,7 +10,7 @@ app = FastAPI(title="Identity Service", version="1.0.0")
 register_tortoise(
     app,
     config=TORTOISE_ORM,
-    generate_schemas=True,
+    generate_schemas=False,
     add_exception_handlers=True,
 )
 app.include_router(public_router)

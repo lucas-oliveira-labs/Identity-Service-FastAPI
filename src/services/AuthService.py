@@ -6,9 +6,15 @@ import os
 
 from src.models.user import User
 from src.models.refresh_token import RefreshToken
-from src.schemas.auth import Login
-from src.core.security import verify_password
+from src.models.password_reset_token import PasswordResetToken
+from src.schemas.auth import Login, ForgotPassword
+from src.core.security import (
+    verify_password,
+    generate_password_reset_token,
+    hash_password_reset_token,
+)
 from src.services.jwt_service import create_access_token, create_refresh_token
+from src.services.email_service import EmailService
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -111,3 +117,39 @@ class AuthService:
         await RefreshToken.filter(user=current_user, revoked=False).update(revoked=True)
 
         return {"message": "Logout realizado com sucesso."}
+
+    async def forgot_password(self, data: ForgotPassword):
+        user = await User.filter(email=data.email).first()
+
+        if not user:
+            return {
+                "message": "Se o email estiver cadastrado, voce receberá um link para redefinir sua senha."
+            }
+
+        await PasswordResetToken.filter(
+            user=user,
+            used_at=None,
+        ).update(used_at=datetime.now(timezone.utc))
+
+        token = generate_password_reset_token()
+
+        token_hash = hash_password_reset_token(token)
+
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=60)
+
+        await PasswordResetToken.create(
+            user=user, token_hash=token_hash, expires_at=expires_at
+        )
+
+        email_service = EmailService()
+
+        await email_service.send_password_reset_email(
+            email=user.email,
+            reset_token=token,
+        )
+
+        return {
+            "message": (
+                "Se o email estiver cadastrado, voce receberá um link para redefinicao de senha"
+            )
+        }

@@ -5,7 +5,8 @@ from jose import JWTError
 from src.models.user import User
 from pwdlib import PasswordHash
 from src.services.jwt_service import decode_token
-
+import hashlib
+import secrets
 
 security = HTTPBearer()
 
@@ -45,3 +46,11 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def hash_password(password: str) -> str:
     return password_hash.hash(password)
+
+
+def generate_password_reset_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def hash_password_reset_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()

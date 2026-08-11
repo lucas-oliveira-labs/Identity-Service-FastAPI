@@ -13,7 +13,7 @@ async def create_user(user: UserCreate, service: UserService = Depends()):
     return await service.create_user(user)
 
 
-@router.post("forgot-password", status_code=status.HTTP_202_ACCEPT)
+@router.post("/forgot-password", status_code=status.HTTP_202_ACCEPTED)
 async def forgot_password(data: ForgotPassword):
     service = AuthService()
 

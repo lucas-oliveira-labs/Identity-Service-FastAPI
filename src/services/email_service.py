@@ -14,8 +14,8 @@ class EmailService:
 
         message = EmailMessage()
 
-        message["From"] = os.getenv("SMTP_FROM")
-        message["To"] - email
+        message["From"] = os.getenv("SMTP_FROM", "no-reply@identity.local")
+        message["To"] = email
         message["Subject"] = "Redefinicao de senha"
 
         message.set_content(
@@ -36,8 +36,6 @@ class EmailService:
 
         await aiosmtplib.send(
             message,
-            hostname=os.getenv("SMTP_HOST"),
+            hostname=os.getenv("SMTP_HOST", "mailpit"),
             port=int(os.getenv("SMTP_PORT", "1025")),
-            username=os.getenv("SMTP_USERNAME"),
-            password=os.getenv("SMTP_PASSWORD"),
         )

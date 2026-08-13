@@ -2,7 +2,7 @@ from tortoise import fields, models
 
 
 class RefreshToken(models.Model):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
 
     token = fields.CharField(max_length=512, unique=True)
 

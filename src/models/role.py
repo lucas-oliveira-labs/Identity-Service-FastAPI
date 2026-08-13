@@ -4,7 +4,7 @@ from src.models.rule import Rule
 
 
 class Role(Model):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
 
     name = fields.CharField(
         max_length=100,

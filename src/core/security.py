@@ -1,12 +1,13 @@
-from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError
-
-from src.models.user import User
-from pwdlib import PasswordHash
-from src.services.jwt_service import decode_token
 import hashlib
 import secrets
+
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError
+from pwdlib import PasswordHash
+
+from src.models.user import User
+from src.services.jwt_service import decode_token
 
 security = HTTPBearer()
 
@@ -38,7 +39,7 @@ async def get_current_user(
 
     except JWTError:
         raise HTTPException(
-            status_code=401, 
+            status_code=401,
             detail="Invalid token",
         ) from None
 

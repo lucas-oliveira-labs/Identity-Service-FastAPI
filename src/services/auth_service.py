@@ -1,21 +1,21 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
-from jose import JWTError, jwt
 from fastapi import HTTPException, status
+from jose import JWTError, jwt
 
-from src.models.user import User
-from src.models.refresh_token import RefreshToken
-from src.models.password_reset_token import PasswordResetToken
-from src.schemas.auth import Login, ForgotPassword, ResetPassword
+from src.config import ALGORITHM, SECRET_KEY
 from src.core.security import (
-    verify_password,
     generate_password_reset_token,
-    hash_password_reset_token,
     hash_password,
+    hash_password_reset_token,
+    verify_password,
 )
-from src.services.jwt_service import create_access_token, create_refresh_token
+from src.models.password_reset_token import PasswordResetToken
+from src.models.refresh_token import RefreshToken
+from src.models.user import User
+from src.schemas.auth import ForgotPassword, Login, ResetPassword
 from src.services.email_service import EmailService
-from src.config import SECRET_KEY, ALGORITHM
+from src.services.jwt_service import create_access_token, create_refresh_token
 
 
 class AuthService:
@@ -36,7 +36,7 @@ class AuthService:
 
         refresh_token = create_refresh_token({"sub": str(user.id)})
 
-        expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+        expires_at = datetime.now(UTC) + timedelta(days=7)
 
         await RefreshToken.filter(user=user, revoked=False).update(revoked=True)
 
@@ -69,7 +69,7 @@ class AuthService:
                     detail="Refresh token inválido",
                 )
 
-            if stored_token.expires_at < datetime.now(timezone.utc):
+            if stored_token.expires_at < datetime.now(UTC):
                 await stored_token.delete()
 
                 raise HTTPException(
@@ -91,7 +91,7 @@ class AuthService:
 
             new_refresh_token = create_refresh_token({"sub": str(user_id)})
 
-            expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+            expires_at = datetime.now(UTC) + timedelta(days=7)
 
             await RefreshToken.create(
                 token=new_refresh_token,
@@ -107,7 +107,7 @@ class AuthService:
 
         except JWTError:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, 
+                status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid refresh token",
             ) from None
 
@@ -128,13 +128,13 @@ class AuthService:
         await PasswordResetToken.filter(
             user=user,
             used_at=None,
-        ).update(used_at=datetime.now(timezone.utc))
+        ).update(used_at=datetime.now(UTC))
 
         token = generate_password_reset_token()
 
         token_hash = hash_password_reset_token(token)
 
-        expires_at = datetime.now(timezone.utc) + timedelta(minutes=60)
+        expires_at = datetime.now(UTC) + timedelta(minutes=60)
 
         await PasswordResetToken.create(
             user=user, token_hash=token_hash, expires_at=expires_at
@@ -172,7 +172,7 @@ class AuthService:
                 detail="Token inválido ou já utilizado.",
             )
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         if reset_token.expires_at <= now:
             raise HTTPException(

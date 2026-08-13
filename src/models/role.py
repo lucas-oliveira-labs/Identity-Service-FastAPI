@@ -1,5 +1,6 @@
 from tortoise import fields
 from tortoise.models import Model
+
 from src.models.rule import Rule
 
 
@@ -15,7 +16,7 @@ class Role(Model):
         null=True,
     )
 
-    rules: fields.ManyToManyRelation["Rule"] = fields.ManyToManyField(
+    rules: fields.ManyToManyRelation[Rule] = fields.ManyToManyField(
         "models.Rule",
         related_name="roles",
     )

@@ -14,7 +14,7 @@ from src.core.security import (
     hash_password,
 )
 from src.services.jwt_service import create_access_token, create_refresh_token
-from src.services.email_service import EmailService
+from src.services.EmailService import EmailService
 from src.config import SECRET_KEY, ALGORITHM
 
 

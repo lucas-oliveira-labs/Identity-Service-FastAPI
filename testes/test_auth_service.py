@@ -5,7 +5,7 @@ import pytest
 from fastapi import HTTPException
 from jose import JWTError
 
-from src.schemas.auth import Login, ForgotPassword
+from src.schemas.auth import Login, ForgotPassword, ResetPassword
 from src.services.AuthService import AuthService
 
 
@@ -319,10 +319,10 @@ async def test_refresh_token_success(auth_service):
 async def test_lougot(auth_service):
     current_user = Mock()
 
-    with patch("src.service.AuthService.RefreshToken.filter") as mock_filter:
+    with patch("src.services.AuthService.RefreshToken.filter") as mock_filter:
         mock_filter.return_value.update = AsyncMock()
 
-        result = await auth_service.lougout(current_user)
+        result = await auth_service.logout(current_user)
 
     assert result == {"message": "Logout realizado com sucesso."}
 
@@ -344,7 +344,172 @@ async def test_forgot_password_user_not_found(auth_service):
 
     assert result == {
         "message": (
-            "Se o email estiver cadastrado, voce receberá"
+            "Se o email estiver cadastrado, voce receberá "
             "um link para redefinir sua senha."
         )
     }
+
+
+@pytest.mark.asyncio
+async def test_forgot_password_success(auth_service):
+    data = ForgotPassword(
+        email="user@example.com",
+    )
+
+    user = Mock()
+    user.email = data.email
+
+    with (
+        patch("src.services.AuthService.User.filter") as mock_user_filter,
+        patch(
+            "src.services.AuthService.PasswordResetToken.filter"
+        ) as mock_token_filter,
+        patch(
+            "src.services.AuthService.generate_password_reset_token",
+            return_value="raw-token",
+        ) as mock_generate_token,
+        patch(
+            "src.services.AuthService.hash_password_reset_token",
+            return_value="hashed-token",
+        ) as mock_hash_token,
+        patch(
+            "src.services.AuthService.PasswordResetToken.create",
+            new_callable=AsyncMock,
+        ) as mock_create,
+        patch("src.services.AuthService.EmailService") as mock_email_service,
+    ):
+        mock_user_filter.return_value.first = AsyncMock(return_value=user)
+
+        mock_token_filter.return_value.update = AsyncMock()
+
+        mock_email_service.return_value.send_password_reset_email = AsyncMock()
+
+        result = await auth_service.forgot_password(data)
+
+    assert result == {
+        "message": (
+            "Se o email estiver cadastrado, voce receberá "
+            "um link para redefinicao de senha"
+        )
+    }
+
+    mock_generate_token.assert_called_once()
+
+    mock_hash_token.assert_called_once_with("raw-token")
+
+    mock_create.assert_awaited_once()
+
+    mock_email_service.return_value.send_password_reset_email.assert_awaited_once_with(
+        email=user.email,
+        reset_token="raw-token",
+    )
+
+
+@pytest.mark.asyncio
+async def test_reset_password_invalid_token(auth_service):
+    data = ResetPassword(
+        token="invalid-token",
+        new_password="new-password",
+    )
+
+    with (
+        patch(
+            "src.services.AuthService.hash_password_reset_token",
+            return_value="hashed-token",
+        ),
+        patch("src.services.AuthService.PasswordResetToken.filter") as mock_filter,
+    ):
+        mock_filter.return_value.prefetch_related.return_value.first = AsyncMock(
+            return_value=None
+        )
+
+        with pytest.raises(HTTPException) as exc_info:
+            await auth_service.reset_password(data)
+
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Token inválido ou já utilizado."
+
+
+@pytest.mark.asyncio
+async def test_reset_password_expired_token(auth_service):
+    data = ResetPassword(
+        token="expired-token",
+        new_password="new-password",
+    )
+
+    reset_token = Mock()
+
+    reset_token.expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+
+    with (
+        patch(
+            "src.services.AuthService.hash_password_reset_token",
+            return_value="hashed-token",
+        ),
+        patch("src.services.AuthService.PasswordResetToken.filter") as mock_filter,
+    ):
+        mock_filter.return_value.prefetch_related.return_value.first = AsyncMock(
+            return_value=reset_token
+        )
+
+        with pytest.raises(HTTPException) as exc_info:
+            await auth_service.reset_password(data)
+
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Token expirado"
+
+
+@pytest.mark.asyncio
+async def test_reset_password_success(auth_service):
+    data = ResetPassword(
+        token="valid-token",
+        new_password="new-password",
+    )
+
+    user = Mock()
+    user.id = 1
+    user.password_hash = "old-password-hash"
+    user.save = AsyncMock()
+
+    reset_token = Mock()
+    reset_token.id = 10
+    reset_token.expires_at = datetime.now(timezone.utc) + timedelta(minutes=30)
+    reset_token.user = user
+    reset_token.save = AsyncMock()
+
+    with (
+        patch(
+            "src.services.AuthService.hash_password_reset_token",
+            return_value="hashed-token",
+        ),
+        patch(
+            "src.services.AuthService.hash_password",
+            return_value="new-password-hash",
+        ) as mock_hash_password,
+        patch("src.services.AuthService.PasswordResetToken.filter") as mock_filter,
+    ):
+        mock_filter.return_value.prefetch_related.return_value.first = AsyncMock(
+            return_value=reset_token
+        )
+
+        mock_filter.return_value.exclude.return_value.update = AsyncMock()
+
+        result = await auth_service.reset_password(data)
+
+    assert result == {"message": "Senha redefinida com sucesso."}
+
+    mock_hash_password.assert_called_once_with("new-password")
+
+    assert user.password_hash == "new-password-hash"
+
+    user.save.assert_awaited_once()
+
+    reset_token.save.assert_awaited_once_with(
+        update_fields=["used_at"],
+    )
+
+    mock_filter.return_value.exclude.assert_called_once_with(
+        id=reset_token.id,
+    )
+
+    mock_filter.return_value.exclude.return_value.update.assert_awaited_once()

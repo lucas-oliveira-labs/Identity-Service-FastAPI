@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 
 class User(Model):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
 
     nome = fields.CharField(max_length=100)
     email = fields.CharField(max_length=255, unique=True)

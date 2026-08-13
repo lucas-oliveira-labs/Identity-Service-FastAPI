@@ -45,7 +45,7 @@ async def test_send_password_reset_email():
 async def test_send_password_reset_email_uses_smtp_environment_variables():
     service = EmailService()
 
-    SMTP_PORT = 587
+    smtp_port = 587
 
     with (
         patch.dict(
@@ -72,7 +72,7 @@ async def test_send_password_reset_email_uses_smtp_environment_variables():
     kwargs = mock_send.await_args.kwargs
 
     assert kwargs["hostname"] == "smtp.example.com"
-    assert kwargs["port"] == SMTP_PORT
+    assert kwargs["port"] == smtp_port
 
     message = mock_send.await_args.args[0]
 
@@ -84,7 +84,7 @@ async def test_send_password_reset_email_uses_smtp_environment_variables():
 async def test_send_password_reset_email_uses_default_smtp_configuration():
     service = EmailService()
 
-    MAILPIT_PORT = 1025
+    mailpit_port = 1025
 
     with (
         patch.dict(
@@ -107,7 +107,7 @@ async def test_send_password_reset_email_uses_default_smtp_configuration():
     kwargs = mock_send.await_args.kwargs
 
     assert kwargs["hostname"] == "mailpit"
-    assert kwargs["port"] == MAILPIT_PORT
+    assert kwargs["port"] == mailpit_port
 
     message = mock_send.await_args.args[0]
 

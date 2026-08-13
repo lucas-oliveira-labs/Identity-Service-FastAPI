@@ -324,7 +324,7 @@ async def test_refresh_token_success(auth_service):
     create_kwargs = mock_create.call_args.kwargs
 
     assert create_kwargs["token"] == "new-refresh-token"
-    assert create_kwargs["user_id"] == 10
+    assert create_kwargs["user_id"] == user_id
     assert create_kwargs["expires_at"] is not None
 
 

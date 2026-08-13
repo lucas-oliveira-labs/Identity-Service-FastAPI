@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from src.core.security import get_current_user
-from src.services.AuthService import AuthService
+from src.services.auth_service import AuthService
 from src.schemas.auth import Login, RefreshToken
 
 

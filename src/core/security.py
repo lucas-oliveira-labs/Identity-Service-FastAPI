@@ -37,7 +37,10 @@ async def get_current_user(
         return user
 
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(
+            status_code=401, 
+            detail="Invalid token",
+        ) from None
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:

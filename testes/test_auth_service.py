@@ -2,11 +2,11 @@ from unittest.mock import AsyncMock, Mock, patch
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from jose import JWTError
 
 from src.schemas.auth import Login, ForgotPassword, ResetPassword
-from src.services.AuthService import AuthService
+from src.services.auth_service import AuthService
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ async def test_login_user_not_found(auth_service):
         with pytest.raises(HTTPException) as exc_info:
             await auth_service.login(login)
 
-    assert exc_info.value.status_code == 401
+    assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
     assert exc_info.value.detail == "Credenciais inválidas"
 
     mock_filter.assert_called_once_with(email=login.email)
@@ -57,7 +57,7 @@ async def test_login_invalid_password(auth_service):
         with pytest.raises(HTTPException) as exc_info:
             await auth_service.login(login)
 
-    assert exc_info.value.status_code == 401
+    assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
     assert exc_info.value.detail == "Credenciais inválidas"
 
     mock_verify_password.assert_called_once_with(
@@ -153,7 +153,7 @@ async def test_refresh_token_invalid_jwt(auth_service):
         with pytest.raises(HTTPException) as exc_info:
             await auth_service.refresh_token("invalid-token")
 
-    assert exc_info.value.status_code == 401
+    assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
     assert exc_info.value.detail == "Invalid refresh token"
 
 
@@ -169,7 +169,7 @@ async def test_refresh_token_wrong_type(auth_service):
         with pytest.raises(HTTPException) as exc_info:
             await auth_service.refresh_token("access-token")
 
-    assert exc_info.value.status_code == 401
+    assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
     assert exc_info.value.detail == "invalid refresh token"
 
 
@@ -190,7 +190,7 @@ async def test_refresh_token_not_found(auth_service):
         with pytest.raises(HTTPException) as exc_info:
             await auth_service.refresh_token("refresh-token")
 
-        assert exc_info.value.status_code == 401
+        assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
         assert exc_info.value.detail == "Refresh token inválido"
 
         mock_filter.assert_called_once_with(token="refresh-token", revoked=False)
@@ -219,7 +219,7 @@ async def test_refresh_token_expired(auth_service):
         with pytest.raises(HTTPException) as exc_info:
             await auth_service.refresh_token("refresh-token")
 
-    assert exc_info.value.status_code == 401
+    assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
     assert exc_info.value.detail == "Refresh token expirado"
 
     stored_token.delete.assert_awaited_once()
@@ -248,7 +248,7 @@ async def test_refresh_token_without_sub(auth_service):
         with pytest.raises(HTTPException) as exc_info:
             await auth_service.refresh_token("refresh-token")
 
-    assert exc_info.value.status_code == 401
+    assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
     assert exc_info.value.detail == "Token inválido"
 
     mock_filter.return_value.update.assert_awaited_once_with(
@@ -426,7 +426,7 @@ async def test_reset_password_invalid_token(auth_service):
         with pytest.raises(HTTPException) as exc_info:
             await auth_service.reset_password(data)
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
     assert exc_info.value.detail == "Token inválido ou já utilizado."
 
 
@@ -455,7 +455,7 @@ async def test_reset_password_expired_token(auth_service):
         with pytest.raises(HTTPException) as exc_info:
             await auth_service.reset_password(data)
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
     assert exc_info.value.detail == "Token expirado"
 
 

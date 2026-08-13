@@ -14,7 +14,7 @@ from src.core.security import (
     hash_password,
 )
 from src.services.jwt_service import create_access_token, create_refresh_token
-from src.services.EmailService import EmailService
+from src.services.email_service import EmailService
 from src.config import SECRET_KEY, ALGORITHM
 
 
@@ -107,8 +107,9 @@ class AuthService:
 
         except JWTError:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
-            )
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Invalid refresh token",
+            ) from None
 
     async def logout(self, current_user: User):
         await RefreshToken.filter(user=current_user, revoked=False).update(revoked=True)
@@ -120,7 +121,8 @@ class AuthService:
 
         if not user:
             return {
-                "message": "Se o email estiver cadastrado, voce receberá um link para redefinir sua senha."
+                "message": "Se o email estiver cadastrado, voce receberá um link"
+                "para redefinir sua senha."
             }
 
         await PasswordResetToken.filter(
@@ -147,7 +149,8 @@ class AuthService:
 
         return {
             "message": (
-                "Se o email estiver cadastrado, voce receberá um link para redefinicao de senha"
+                "Se o email estiver cadastrado, voce receberá um link "
+                "para redefinicao de senha"
             )
         }
 

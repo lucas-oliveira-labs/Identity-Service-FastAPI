@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status
 from src.schemas.user import UserCreate
 from src.schemas.auth import ForgotPassword, ResetPassword
 from src.services.user_service import UserService
-from src.services.AuthService import AuthService
+from src.services.auth_service import AuthService
 
 router = APIRouter(prefix="/created", tags=["created"])
 

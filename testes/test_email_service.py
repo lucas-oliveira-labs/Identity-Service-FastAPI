@@ -2,7 +2,7 @@ import pytest
 from email.message import EmailMessage
 from unittest.mock import AsyncMock, patch
 
-from src.services.EmailService import EmailService
+from src.services.email_service import EmailService
 
 
 @pytest.fixture

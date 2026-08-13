@@ -46,6 +46,26 @@ src_folder = "./."
 [tool.poetry]
 package-mode = false
 
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "B",
+    "N",
+    "UP",
+    "SIM",
+    "PL",
+]
+
+ignore = [
+    "EXE",
+]
+
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = [
     "fastapi.Depends",

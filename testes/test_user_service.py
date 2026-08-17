@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from fastapi import HTTPException, status
 
 from src.services.user_service import UserService
@@ -89,9 +90,9 @@ async def test_create_user_email_already_exists(service, user_create):
             "src.services.user_service.User.create",
             new_callable=AsyncMock,
         ) as mock_create,
+        pytest.raises(HTTPException) as exc,
     ):
-        with pytest.raises(HTTPException) as exc:
-            await service.create_user(user_create)
+        await service.create_user(user_create)
 
     assert exc.value.status_code == status.HTTP_409_CONFLICT
     assert exc.value.detail == "Email já cadastrado"
@@ -184,12 +185,14 @@ async def test_put_user_by_id_not_found(service, user_update):
     query = MagicMock()
     query.first = AsyncMock(return_value=None)
 
-    with patch(
-        "src.services.user_service.User.filter",
-        return_value=query,
+    with (
+        patch(
+            "src.services.user_service.User.filter",
+            return_value=query,
+        ),
+        pytest.raises(HTTPException) as exc,
     ):
-        with pytest.raises(HTTPException) as exc:
-            await service.put_user_by_id(999, user_update)
+        await service.put_user_by_id(999, user_update)
 
     assert exc.value.status_code == status.HTTP_404_NOT_FOUND
     assert exc.value.detail == "Usuário não encontrado"
@@ -234,15 +237,17 @@ async def test_put_user_me_email_already_exists(service, user_update):
     query = MagicMock()
     query.exclude.return_value.exists = AsyncMock(return_value=True)
 
-    with patch(
-        "src.services.user_service.User.filter",
-        return_value=query,
+    with (
+        patch(
+            "src.services.user_service.User.filter",
+            return_value=query,
+        ),
+        pytest.raises(HTTPException) as exc,
     ):
-        with pytest.raises(HTTPException) as exc:
-            await service.put_user_me(
-                current_user,
-                user_update,
-            )
+        await service.put_user_me(
+            current_user,
+            user_update,
+        )
 
     assert exc.value.status_code == status.HTTP_409_CONFLICT
     assert exc.value.detail == "Email já cadastrado"
@@ -383,15 +388,17 @@ async def test_update_password_invalid_current_password(
     current_user.password_hash = "old-hash"
     current_user.save = AsyncMock()
 
-    with patch(
-        "src.services.user_service.verify_password",
-        return_value=False,
-    ) as mock_verify:
-        with pytest.raises(HTTPException) as exc:
-            await service.update_password(
-                current_user,
-                user_password_update,
-            )
+    with (
+        patch(
+            "src.services.user_service.verify_password",
+            return_value=False,
+        ) as mock_verify,
+        pytest.raises(HTTPException) as exc,
+    ):
+        await service.update_password(
+            current_user,
+            user_password_update,
+        )
 
     assert exc.value.status_code == status.HTTP_401_UNAUTHORIZED
     assert exc.value.detail == "Senha atual inválida"
@@ -424,13 +431,15 @@ async def test_delete_user_by_id_success(service):
 
 @pytest.mark.asyncio
 async def test_delete_user_by_id_not_found(service):
-    with patch(
-        "src.services.user_service.User.get_or_none",
-        new_callable=AsyncMock,
-        return_value=None,
-    ) as mock_get:
-        with pytest.raises(HTTPException) as exc:
-            await service.delete_user_by_id(999)
+    with (
+        patch(
+            "src.services.user_service.User.get_or_none",
+            new_callable=AsyncMock,
+            return_value=None,
+        ) as mock_get,
+        pytest.raises(HTTPException) as exc,
+    ):
+        await service.delete_user_by_id(999)
 
     assert exc.value.status_code == status.HTTP_404_NOT_FOUND
     assert exc.value.detail == "Usuário não encontrado"

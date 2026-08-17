@@ -1,7 +1,8 @@
-from src.models.user import User
-from src.schemas.user import UserCreate, UserUpdate, UserPasswordUpdate
 from fastapi import HTTPException, status
+
 from src.core.security import hash_password, verify_password
+from src.models.user import User
+from src.schemas.user import UserCreate, UserPasswordUpdate, UserUpdate
 
 
 class UserService:

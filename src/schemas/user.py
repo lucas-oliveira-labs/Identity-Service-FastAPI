@@ -1,6 +1,6 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
 from datetime import datetime
+
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserCreate(BaseModel):
@@ -19,9 +19,9 @@ class UserGet(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    nome: Optional[str] = Field(None, min_length=2, max_length=100)
-    email: Optional[EmailStr] = Field(None, min_length=8, max_length=255)
-    password: Optional[str] = Field(None, min_length=6, max_length=255)
+    nome: str | None = Field(None, min_length=2, max_length=100)
+    email: EmailStr | None = Field(None, min_length=8, max_length=255)
+    password: str | None = Field(None, min_length=6, max_length=255)
 
 
 class UserPasswordUpdate(BaseModel):

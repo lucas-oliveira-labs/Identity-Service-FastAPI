@@ -1,9 +1,9 @@
-from fastapi import APIRouter, status, Depends
-from src.schemas.user import UserGet, UserUpdate, UserPasswordUpdate
-from src.services.user_service import UserService
+from fastapi import APIRouter, Depends, status
+
 from src.core.security import get_current_user
 from src.models.user import User
-
+from src.schemas.user import UserGet, UserPasswordUpdate, UserUpdate
+from src.services.user_service import UserService
 
 router = APIRouter(
     prefix="/users", tags=["Users"], dependencies=[Depends(get_current_user)]

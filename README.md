@@ -36,75 +36,6 @@ O serviço fornece recursos para:
 
 ---
 
-## Arquitetura
-
-O projeto segue uma separação entre **rotas**, **serviços**, **schemas**, **modelos** e **componentes de infraestrutura**.
-
-```text
-.
-├── main.py
-├── migrations/
-├── src/
-│   ├── core/
-│   │   └── security.py
-│   │
-│   ├── database.py
-│   │
-│   ├── models/
-│   │   ├── password_reset_token.py
-│   │   ├── refresh_token.py
-│   │   ├── role.py
-│   │   ├── rule.py
-│   │   └── user.py
-│   │
-│   ├── routers/
-│   │   ├── auth_router.py
-│   │   ├── private_router.py
-│   │   └── public_router.py
-│   │
-│   ├── schemas/
-│   │   ├── auth.py
-│   │   └── user.py
-│   │
-│   └── services/
-│       ├── auth_service.py
-│       └── user_service.py
-│
-├── Dockerfile
-├── docker-compose.yml
-├── pyproject.toml
-├── poetry.lock
-└── README.md
-```
-
-### Responsabilidades
-
-#### `routers`
-
-Define os endpoints HTTP da aplicação.
-
-#### `services`
-
-Contém a lógica de negócio da aplicação.
-
-#### `schemas`
-
-Define os modelos de entrada e saída utilizados pela API através do Pydantic.
-
-#### `models`
-
-Define as entidades persistidas no PostgreSQL utilizando Tortoise ORM.
-
-#### `core`
-
-Contém componentes centrais da aplicação, como autenticação e segurança.
-
-#### `migrations`
-
-Contém as migrations gerenciadas pelo Aerich.
-
----
-
 # Executando o projeto
 
 ## Pré-requisitos
@@ -134,7 +65,7 @@ DATABASE_URL=postgres://postgres:postgres@postgres:5432/identity_db
 
 REDIS_URL=redis://redis:6379
 
-SECRET_KEY=change-me
+SECRET_KEY=*******
 ALGORITHM=HS256
 
 ACCESS_TOKEN_EXPIRE_MINUTES=30

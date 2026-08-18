@@ -66,10 +66,10 @@ DATABASE_URL=postgres://postgres:postgres@postgres:5432/identity_db
 REDIS_URL=redis://redis:6379
 
 SECRET_KEY=*******
-ALGORITHM=HS256
+ALGORITHM="TIPO"
 
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-REFRESH_TOKEN_EXPIRE_DAYS=7
+ACCESS_TOKEN_EXPIRE_MINUTES=tempo em minutos
+REFRESH_TOKEN_EXPIRE_DAYS=1
 
 SMTP_HOST=mailpit
 SMTP_PORT=1025
@@ -427,10 +427,6 @@ curl -X POST "http://localhost:8000/auth/refresh" \
 
 A lógica de renovação é implementada por:
 
-```text
-AuthService.refresh_token()
-```
-
 ---
 
 ## `POST /auth/logout`
@@ -443,9 +439,6 @@ Obrigatória.
 
 O endpoint utiliza:
 
-```python
-Depends(get_current_user)
-```
 
 ### Exemplo
 
@@ -469,8 +462,6 @@ AuthService.logout()
 ```text
 /created
 ```
-
-Apesar do nome do router ser `public_router`, os endpoints atualmente registrados utilizam o prefixo `/created`.
 
 ---
 
@@ -518,12 +509,6 @@ curl -X POST "http://localhost:8000/created/" \
   }'
 ```
 
-A lógica de criação está em:
-
-```text
-UserService.create_user()
-```
-
 ---
 
 ## `POST /created/forgot-password`
@@ -556,12 +541,6 @@ curl -X POST "http://localhost:8000/created/forgot-password" \
   -d '{
     "email": "lucas@example.com"
   }'
-```
-
-A operação é realizada por:
-
-```text
-AuthService.forgot_password()
 ```
 
 ---
@@ -623,13 +602,7 @@ AuthService.reset_password()
 /users
 ```
 
-Todos os endpoints desse router possuem:
-
-```python
-dependencies=[Depends(get_current_user)]
-```
-
-Portanto, exigem autenticação.
+Exigem autenticação.
 
 O header esperado é:
 
@@ -737,11 +710,6 @@ Caso o usuário não seja encontrado, a intenção da implementação é retorna
 ```text
 404 Not Found
 ```
-
-> **Observação:** a implementação atual retorna `{404: "User not found"}` diretamente quando o usuário não existe, em vez de lançar `HTTPException(status_code=404, ...)`.
->
-> Isso significa que o comportamento HTTP real pode não corresponder ao `404` pretendido. Recomenda-se corrigir esse ponto no serviço/router.
-
 ---
 
 ## `PUT /users/me`

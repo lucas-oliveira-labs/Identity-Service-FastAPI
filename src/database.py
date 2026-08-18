@@ -1,13 +1,15 @@
+import os
+
 TORTOISE_ORM = {
     "connections": {
         "default": {
             "engine": "tortoise.backends.asyncpg",
             "credentials": {
-                "host": "postgres",
-                "port": 5432,
-                "user": "postgres",
-                "password": "postgres",
-                "database": "identity_db",
+                "host": os.getenv("DATABASE_HOST", "postgres"),
+                "port": int(os.getenv("DATABASE_PORT", "5432")),
+                "user": os.getenv("DATABASE_USER", "postgres"),
+                "password": os.getenv("DATABASE_PASSWORD", "postgres"),
+                "database": os.getenv("DATABASE_NAME", "identity_db"),
             },
         }
     },

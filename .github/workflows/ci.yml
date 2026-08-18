@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test:
+    name: Testes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build da aplicação
+        run: docker compose -f docker-compose.ci.yaml build
+
+      - name: Subir ambiente
+        run: docker compose -f docker-compose.ci.yaml up -d --wait
+
+      - name: Verificar containers
+        run: docker compose -f docker-compose.ci.yaml ps
+
+      - name: Executar migrations
+        run: docker compose -f docker-compose.ci.yaml exec -T api aerich upgrade
+
+      - name: Executar lint
+        run: docker compose -f docker-compose.ci.yaml exec -T api ruff check .
+
+      - name: Executar testes e coverage
+        run: >
+          docker compose -f docker-compose.ci.yaml
+          exec -T api
+          pytest -v --cov=src --cov-report=term-missing
+
+      - name: Exibir logs em caso de falha
+        if: failure()
+        run: docker compose -f docker-compose.ci.yaml logs
+
+      - name: Derrubar ambiente
+        if: always()
+        run: docker compose -f docker-compose.ci.yaml down -v

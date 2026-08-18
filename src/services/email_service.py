@@ -1,5 +1,5 @@
-from email.message import EmailMessage
 import os
+from email.message import EmailMessage
 
 import aiosmtplib
 

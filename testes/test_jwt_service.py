@@ -1,16 +1,15 @@
-import pytest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import patch
 
-from jose import jwt
+import pytest
+from jose import JWTError, jwt
 
-from src.config import ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from src.config import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM
 from src.services.jwt_service import (
     create_access_token,
     create_refresh_token,
     decode_token,
 )
-
 
 TEST_SECRET_KEY = "test-secret-key"
 
@@ -49,11 +48,11 @@ def test_create_access_token():
 def test_create_access_token_has_correct_expiration():
     data = {"sub": "user-123"}
 
-    before = datetime.now(timezone.utc)
+    before = datetime.now(UTC)
 
     token = create_access_token(data)
 
-    after = datetime.now(timezone.utc)
+    after = datetime.now(UTC)
 
     payload = jwt.decode(
         token,
@@ -93,11 +92,11 @@ def test_create_refresh_token():
 def test_create_refresh_token_has_seven_days_expiration():
     data = {"sub": "user-123"}
 
-    before = datetime.now(timezone.utc)
+    before = datetime.now(UTC)
 
     token = create_refresh_token(data)
 
-    after = datetime.now(timezone.utc)
+    after = datetime.now(UTC)
 
     payload = jwt.decode(
         token,
@@ -133,7 +132,7 @@ def test_decode_token():
 
 
 def test_decode_token_rejects_invalid_token():
-    with pytest.raises(Exception):
+    with pytest.raises(JWTError):
         decode_token("token-invalido")
 
 
@@ -144,7 +143,7 @@ def test_decode_token_rejects_token_with_wrong_secret():
         algorithm=ALGORITHM,
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(JWTError):
         decode_token(token)
 
 

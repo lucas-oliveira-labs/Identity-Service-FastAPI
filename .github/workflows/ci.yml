@@ -39,7 +39,7 @@ jobs:
         run: >
           docker compose -f docker-compose.ci.yaml
           exec -T api
-          pytest -v -- cov=src --cov-report=term-missing
+          pytest -v --cov=src --cov-report=term-missing
 
       - name: Exibir logs em caso de falha
         if: failure()
